@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ganesh Utsav - Shubhangan Omaxe City 1</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 32px;
+        }
+        h1 {
+            color: #d35400;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        h2 {
+            color: #2980b9;
+            text-align: center;
+            margin-top: 0;
+        }
+        .schedule {
+            margin: 32px 0;
+        }
+        .event {
+            background: #fbeee6;
+            border-left: 6px solid #d35400;
+            margin-bottom: 16px;
+            padding: 16px 24px;
+            border-radius: 8px;
+        }
+        .bhandara {
+            background: #eafaf1;
+            border-left: 6px solid #27ae60;
+        }
+        .date {
+            font-weight: bold;
+            color: #34495e;
+        }
+        .footer {
+            text-align: center;
+            color: #888;
+            margin-top: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🙏 Ganesh Utsav Pooja & Aarti Schedule 🙏</h1>
+        <h2>Shubhangan Omaxe City 1</h2>
+        <p style="text-align:center; font-size:1.1em;">Join us in celebrating Ganesh Utsav with daily Aarti and a special Bhandara event!</p>
+        <div class="schedule" id="schedule">
+            <h3 style="text-align:center; color:#d35400;">Today's & Next Event</h3>
+            <!-- Events will be injected here -->
+        </div>
+        <div id="counter" style="text-align:center; font-size:2em; font-weight:bold; color:#d35400; margin-bottom:32px;"></div>
+        <div class="footer" style="background:#fbeee6; border-radius:16px; box-shadow:0 2px 8px rgba(211,84,0,0.08); padding:32px 24px; max-width:600px; margin:32px auto 0 auto;">
+            <div style="margin-bottom:12px;">Wishing everyone a blessed and joyful Ganesh Utsav!</div>
+            <span style="font-size:0.9em;">For more details, contact your society committee.</span>
+            <hr style="margin:24px 0; border-color:#d35400;">
+            <div style="background:#eafaf1;border-left:6px solid #27ae60;padding:16px 24px;border-radius:8px;max-width:500px;margin:0 auto;">
+                <strong>Special Invitation:</strong><br>
+                You and your family are warmly invited to the <b>Bhandara</b> on the last day of Ganesh Visarjan (6th September 2025), after the Evening Aarti. Let's celebrate together with devotion and joy!
+            </div>
+        </div>
+    </div>
+    <script>
+        // Event data
+        const events = [];
+        const startDate = new Date('2025-08-26');
+        const endDate = new Date('2025-09-06');
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            events.push({
+                date: new Date(d),
+                morning: '8:00 AM',
+                evening: '9:00 PM',
+                bhandara: d.getDate() === 6 && d.getMonth() === 8 // Sep is month 8 (0-indexed)
+            });
+        }
+
+        // Get today's and next day's event
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        let todayEventIdx = events.findIndex(e => e.date.getTime() === today.getTime());
+        if (todayEventIdx === -1) todayEventIdx = 0;
+        const todayEvent = events[todayEventIdx];
+        const nextEvent = events[todayEventIdx + 1] || null;
+
+        // Render events
+        function formatDate(date) {
+            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', weekday: 'short' });
+        }
+        let html = '';
+        if (todayEvent) {
+            html += `<div class="event${todayEvent.bhandara ? ' bhandara' : ''}">
+                <span class="date">${formatDate(todayEvent.date)}</span><br>
+                <strong>Morning Aarti:</strong> ${todayEvent.morning}<br>
+                <strong>Evening Aarti:</strong> ${todayEvent.evening}<br>
+                ${todayEvent.bhandara ? '<strong>Bhandara:</strong> After Evening Aarti' : ''}
+            </div>`;
+        }
+        if (nextEvent) {
+            html += `<div class="event${nextEvent.bhandara ? ' bhandara' : ''}">
+                <span class="date">${formatDate(nextEvent.date)}</span><br>
+                <strong>Morning Aarti:</strong> ${nextEvent.morning}<br>
+                <strong>Evening Aarti:</strong> ${nextEvent.evening}<br>
+                ${nextEvent.bhandara ? '<strong>Bhandara:</strong> After Evening Aarti' : ''}
+            </div>`;
+        }
+        document.getElementById('schedule').innerHTML += html;
+
+        // Countdown to next event
+        function getNextEventTime() {
+            const now = new Date();
+            let nextTime;
+            // If before morning aarti
+            const morningAarti = new Date(todayEvent.date);
+            morningAarti.setHours(8,0,0,0);
+            if (now < morningAarti) {
+                nextTime = morningAarti;
+                return { label: 'Morning Aarti', time: nextTime };
+            }
+            // If before evening aarti
+            const eveningAarti = new Date(todayEvent.date);
+            eveningAarti.setHours(21,0,0,0);
+            if (now < eveningAarti) {
+                nextTime = eveningAarti;
+                return { label: 'Evening Aarti', time: nextTime };
+            }
+            // If Bhandara today and after evening aarti
+            if (todayEvent.bhandara && now >= eveningAarti) {
+                return { label: 'Bhandara', time: eveningAarti };
+            }
+            // Otherwise, next day's morning aarti
+            if (nextEvent) {
+                const nextMorning = new Date(nextEvent.date);
+                nextMorning.setHours(8,0,0,0);
+                return { label: 'Morning Aarti', time: nextMorning };
+            }
+            return null;
+        }
+        function updateCounter() {
+            const next = getNextEventTime();
+            if (!next) {
+                document.getElementById('counter').textContent = 'All events completed.';
+                return;
+            }
+            const now = new Date();
+            const diff = next.time - now;
+            if (diff <= 0) {
+                document.getElementById('counter').textContent = `${next.label} is happening now!`;
+                return;
+            }
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const secs = Math.floor((diff % (1000 * 60)) / 1000);
+            document.getElementById('counter').textContent = `Next: ${next.label} in ${hours}h ${mins}m ${secs}s`;
+        }
+        updateCounter();
+        setInterval(updateCounter, 1000);
+    </script>
+</body>
+</html>
