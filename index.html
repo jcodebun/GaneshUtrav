@@ -55,7 +55,10 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="mainContent">
+        <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:8px;">
+            <button id="langSwitch" style="padding:8px 16px;font-size:1em;border-radius:8px;border:none;background:#d35400;color:#fff;cursor:pointer;">हिन्दी</button>
+        </div>
         <h1>🙏 Ganesh Utsav Pooja & Aarti Schedule 🙏</h1>
         <h2>Shubhangan Omaxe City 1</h2>
         <p style="text-align:center; font-size:1.1em;">Join us in celebrating Ganesh Utsav with daily Aarti and a special Bhandara event!</p>
@@ -69,13 +72,60 @@
             <span style="font-size:0.9em;">For more details, contact your society committee.</span>
             <hr style="margin:24px 0; border-color:#d35400;">
             <div style="background:linear-gradient(90deg,#ffe066,#eafaf1);border-left:8px solid #27ae60;padding:20px 28px;border-radius:14px;max-width:520px;margin:0 auto;box-shadow:0 4px 16px rgba(39,174,96,0.12); border:2px solid #27ae60; font-size:1.15em; font-weight:bold; color:#145a32;">
-                <span style="font-size:1.2em; color:#d35400;">🌟 Special Invitation 🌟</span><br>
+                <span style="font-size:1.2em; color:#d35400;"><img src="logo.png" alt="Logo" style="height:48px;width:48px;vertical-align:middle;margin-right:12px;background:transparent;border-radius:50%;box-shadow:none;"> Special Invitation </span><br>
                 You and your family are warmly invited to the <b style="color:#27ae60; font-size:1.1em;">Bhandara</b> on the last day of Ganesh Visarjan <b>(6th September 2025)</b>, after the Evening Aarti.<br>
                 <span style="color:#d35400; font-weight:bold;">Let's celebrate together with devotion and joy!</span>
             </div>
         </div>
     </div>
     <script>
+        // Language data
+        const langData = {
+            en: {
+                heading: '🙏 Ganesh Utsav Pooja & Aarti Schedule 🙏',
+                subheading: 'Shubhangan Omaxe City 1',
+                intro: 'Join us in celebrating Ganesh Utsav with daily Aarti and a special Bhandara event!',
+                schedule: "Today's & Next Event",
+                morning: 'Morning Aarti:',
+                evening: 'Evening Aarti:',
+                bhandara: 'Bhandara:',
+                invitationTitle: 'Special Invitation',
+                invitation: 'You and your family are warmly invited to the <b style="color:#27ae60; font-size:1.1em;">Bhandara</b> on the last day of Ganesh Visarjan <b>(6th September 2025)</b>, after the Evening Aarti.<br><span style="color:#d35400; font-weight:bold;">Let\'s celebrate together with devotion and joy!</span>',
+                wish: 'Wishing everyone a blessed and joyful Ganesh Utsav!',
+                contact: 'For more details, contact your society committee.'
+            },
+            hi: {
+                heading: '🙏 गणेश उत्सव पूजा और आरती कार्यक्रम 🙏',
+                subheading: 'शुभांगन ओमैक्स सिटी 1',
+                intro: 'प्रतिदिन आरती और अंतिम दिन भंडारे के साथ गणेश उत्सव मनाने के लिए आमंत्रित हैं!',
+                schedule: 'आज और अगला कार्यक्रम',
+                morning: 'प्रातः आरती:',
+                evening: 'सांय आरती:',
+                bhandara: 'भंडारा:',
+                invitationTitle: 'विशेष निमंत्रण',
+                invitation: 'आप और आपके परिवार को <b style="color:#27ae60; font-size:1.1em;">भंडारे</b> के लिए हार्दिक निमंत्रण है, गणेश विसर्जन के अंतिम दिन <b>(6 सितम्बर 2025)</b>, सांय आरती के बाद।<br><span style="color:#d35400; font-weight:bold;">आइए, भक्ति और आनंद के साथ मिलकर उत्सव मनाएं!</span>',
+                wish: 'सभी को गणेश उत्सव की हार्दिक शुभकामनाएं!',
+                contact: 'अधिक जानकारी के लिए अपनी सोसाइटी समिति से संपर्क करें।'
+            }
+        };
+        let currentLang = 'en';
+        function switchLang() {
+            currentLang = currentLang === 'en' ? 'hi' : 'en';
+            document.getElementById('langSwitch').textContent = currentLang === 'en' ? 'हिन्दी' : 'English';
+            // Update all text
+            document.querySelector('h1').textContent = langData[currentLang].heading;
+            document.querySelector('h2').textContent = langData[currentLang].subheading;
+            document.querySelector('p').textContent = langData[currentLang].intro;
+            document.querySelector('.schedule h3').textContent = langData[currentLang].schedule;
+            document.querySelector('.footer div').textContent = langData[currentLang].wish;
+            document.querySelector('.footer span').textContent = langData[currentLang].contact;
+            document.querySelector('.footer hr + div span').innerHTML = `<img src="logo.png" alt="Logo" style="height:48px;width:48px;vertical-align:middle;margin-right:12px;background:transparent;border-radius:50%;box-shadow:none;"> ${langData[currentLang].invitationTitle}`;
+            document.querySelector('.footer hr + div').innerHTML = `<span style=\"font-size:1.2em; color:#d35400;\"><img src=\"logo.png\" alt=\"Logo\" style=\"height:48px;width:48px;vertical-align:middle;margin-right:12px;background:transparent;border-radius:50%;box-shadow:none;\"> ${langData[currentLang].invitationTitle} </span><br>${langData[currentLang].invitation}`;
+            // Update event labels
+            renderEvents();
+        }
+        document.getElementById('langSwitch').onclick = switchLang;
+
         // Event data
         const events = [];
         const startDate = new Date('2025-08-27');
@@ -83,8 +133,8 @@
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
             events.push({
                 date: new Date(d),
-                morning: '8:00 AM',
-                evening: '9:00 PM',
+                morning: '8:30 AM - 9:00 AM',
+                evening: '8:30 PM - 9:00 PM',
                 bhandara: d.getDate() === 6 && d.getMonth() === 8 // Sep is month 8 (0-indexed)
             });
         }
@@ -101,24 +151,27 @@
         function formatDate(date) {
             return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', weekday: 'short' });
         }
-        let html = '';
-        if (todayEvent) {
-            html += `<div class="event${todayEvent.bhandara ? ' bhandara' : ''}">
-                <span class="date">${formatDate(todayEvent.date)}</span><br>
-                <strong>Morning Aarti:</strong> ${todayEvent.morning}<br>
-                <strong>Evening Aarti:</strong> ${todayEvent.evening}<br>
-                ${todayEvent.bhandara ? '<strong>Bhandara:</strong> After Evening Aarti' : ''}
-            </div>`;
+        function renderEvents() {
+            let html = '';
+            if (todayEvent) {
+                html += `<div class="event${todayEvent.bhandara ? ' bhandara' : ''}">
+                    <span class="date">${formatDate(todayEvent.date)}</span><br>
+                    <strong>${langData[currentLang].morning}</strong> ${todayEvent.morning}<br>
+                    <strong>${langData[currentLang].evening}</strong> ${todayEvent.evening}<br>
+                    ${todayEvent.bhandara ? `<strong>${langData[currentLang].bhandara}</strong> After Evening Aarti` : ''}
+                </div>`;
+            }
+            if (nextEvent) {
+                html += `<div class="event${nextEvent.bhandara ? ' bhandara' : ''}">
+                    <span class="date">${formatDate(nextEvent.date)}</span><br>
+                    <strong>${langData[currentLang].morning}</strong> ${nextEvent.morning}<br>
+                    <strong>${langData[currentLang].evening}</strong> ${nextEvent.evening}<br>
+                    ${nextEvent.bhandara ? `<strong>${langData[currentLang].bhandara}</strong> After Evening Aarti` : ''}
+                </div>`;
+            }
+            document.getElementById('schedule').innerHTML = `<h3 style="text-align:center; color:#d35400;">${langData[currentLang].schedule}</h3>` + html;
         }
-        if (nextEvent) {
-            html += `<div class="event${nextEvent.bhandara ? ' bhandara' : ''}">
-                <span class="date">${formatDate(nextEvent.date)}</span><br>
-                <strong>Morning Aarti:</strong> ${nextEvent.morning}<br>
-                <strong>Evening Aarti:</strong> ${nextEvent.evening}<br>
-                ${nextEvent.bhandara ? '<strong>Bhandara:</strong> After Evening Aarti' : ''}
-            </div>`;
-        }
-        document.getElementById('schedule').innerHTML += html;
+        renderEvents();
 
         // Countdown to next event
         function getNextEventTime() {
@@ -126,14 +179,14 @@
             let nextTime;
             // If before morning aarti
             const morningAarti = new Date(todayEvent.date);
-            morningAarti.setHours(8,0,0,0);
+            morningAarti.setHours(8,30,0,0);
             if (now < morningAarti) {
                 nextTime = morningAarti;
                 return { label: 'Morning Aarti', time: nextTime };
             }
             // If before evening aarti
             const eveningAarti = new Date(todayEvent.date);
-            eveningAarti.setHours(21,0,0,0);
+            eveningAarti.setHours(20,30,0,0);
             if (now < eveningAarti) {
                 nextTime = eveningAarti;
                 return { label: 'Evening Aarti', time: nextTime };
@@ -145,7 +198,7 @@
             // Otherwise, next day's morning aarti
             if (nextEvent) {
                 const nextMorning = new Date(nextEvent.date);
-                nextMorning.setHours(8,0,0,0);
+                nextMorning.setHours(8,30,0,0);
                 return { label: 'Morning Aarti', time: nextMorning };
             }
             return null;
@@ -172,4 +225,3 @@
     </script>
 </body>
 </html>
-
