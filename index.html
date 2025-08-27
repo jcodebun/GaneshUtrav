@@ -59,7 +59,7 @@
         <div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:8px;">
             <button id="langSwitch" style="padding:8px 16px;font-size:1em;border-radius:8px;border:none;background:#d35400;color:#fff;cursor:pointer;">हिन्दी</button>
         </div>
-        <h1>🙏 Ganesh Utsav Pooja & Aarti Schedule 🙏</h1>
+        <h1>🙏 Ganesh Utsav Aarti Schedule 🙏</h1>
         <h2>Shubhangan Omaxe City 1</h2>
         <p style="text-align:center; font-size:1.1em;">Join us in celebrating Ganesh Utsav with daily Aarti and a special Bhandara event!</p>
         <div class="schedule" id="schedule">
@@ -96,7 +96,7 @@
                 contact: 'For more details, contact your society committee.'
             },
             hi: {
-                heading: '🙏 गणेश उत्सव पूजा और आरती कार्यक्रम 🙏',
+                heading: '🙏 गणेश उत्सव आरती कार्यक्रम 🙏',
                 subheading: 'शुभांगन ओमैक्स सिटी 1',
                 intro: 'प्रतिदिन आरती और अंतिम दिन भंडारे के साथ गणेश उत्सव मनाने के लिए आमंत्रित हैं!',
                 schedule: 'आज और अगला कार्यक्रम',
@@ -131,33 +131,35 @@
         const events = [];
         const startDate = new Date('2025-08-27');
         const endDate = new Date('2025-09-06');
-        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        for (let d = new Date(startDate), i = 0; d <= endDate; d.setDate(d.getDate() + 1), i++) {
             events.push({
                 date: new Date(d),
-                morning: '8:30 AM - 9:00 AM',
+                morning: i === 0 ? '' : '8:30 AM - 9:00 AM', // Only from day 2 onwards
                 evening: '8:30 PM - 9:00 PM',
                 bhandara: d.getDate() === 6 && d.getMonth() === 8 // Sep is month 8 (0-indexed)
             });
         }
 
-        // Get today's and next day's event
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        let todayEventIdx = events.findIndex(e => e.date.getTime() === today.getTime());
-        if (todayEventIdx === -1) todayEventIdx = 0;
-        const todayEvent = events[todayEventIdx];
-        const nextEvent = events[todayEventIdx + 1] || null;
-
+        function getTodayEventIdx() {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            let idx = events.findIndex(e => e.date.getTime() === today.getTime());
+            if (idx === -1) idx = 0;
+            return idx;
+        }
         // Render events
         function formatDate(date) {
             return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', weekday: 'short' });
         }
         function renderEvents() {
+            const todayEventIdx = getTodayEventIdx();
+            const todayEvent = events[todayEventIdx];
+            const nextEvent = events[todayEventIdx + 1] || null;
             let html = '';
             if (todayEvent) {
                 html += `<div class="event${todayEvent.bhandara ? ' bhandara' : ''}">
                     <span class="date">${formatDate(todayEvent.date)}</span><br>
-                    <strong>${langData[currentLang].morning}</strong> ${todayEvent.morning}<br>
+                    ${todayEvent.morning ? `<strong>${langData[currentLang].morning}</strong> ${todayEvent.morning}<br>` : ''}
                     <strong>${langData[currentLang].evening}</strong> ${todayEvent.evening}<br>
                     ${todayEvent.bhandara ? `<strong>${langData[currentLang].bhandara}</strong> After Evening Aarti` : ''}
                 </div>`;
@@ -165,7 +167,7 @@
             if (nextEvent) {
                 html += `<div class="event${nextEvent.bhandara ? ' bhandara' : ''}">
                     <span class="date">${formatDate(nextEvent.date)}</span><br>
-                    <strong>${langData[currentLang].morning}</strong> ${nextEvent.morning}<br>
+                    ${nextEvent.morning ? `<strong>${langData[currentLang].morning}</strong> ${nextEvent.morning}<br>` : ''}
                     <strong>${langData[currentLang].evening}</strong> ${nextEvent.evening}<br>
                     ${nextEvent.bhandara ? `<strong>${langData[currentLang].bhandara}</strong> After Evening Aarti` : ''}
                 </div>`;
@@ -176,16 +178,35 @@
 
         // Countdown to next event
         function getNextEventTime() {
+            const todayEventIdx = getTodayEventIdx();
+            const todayEvent = events[todayEventIdx];
+            const nextEvent = events[todayEventIdx + 1] || null;
             const now = new Date();
             let nextTime;
-            // If before morning aarti
+            if (!todayEvent) return null;
+            // For first day, only evening Aarti
+            if (todayEventIdx === 0) {
+                const eveningAarti = new Date(todayEvent.date);
+                eveningAarti.setHours(20,30,0,0);
+                if (now < eveningAarti) {
+                    nextTime = eveningAarti;
+                    return { label: 'Evening Aarti', time: nextTime };
+                }
+                // After evening Aarti, go to next day's morning Aarti
+                if (nextEvent) {
+                    const nextMorning = new Date(nextEvent.date);
+                    nextMorning.setHours(8,30,0,0);
+                    return { label: 'Morning Aarti', time: nextMorning };
+                }
+                return null;
+            }
+            // For other days, check morning then evening
             const morningAarti = new Date(todayEvent.date);
             morningAarti.setHours(8,30,0,0);
-            if (now < morningAarti) {
+            if (now < morningAarti && todayEvent.morning) {
                 nextTime = morningAarti;
                 return { label: 'Morning Aarti', time: nextTime };
             }
-            // If before evening aarti
             const eveningAarti = new Date(todayEvent.date);
             eveningAarti.setHours(20,30,0,0);
             if (now < eveningAarti) {
