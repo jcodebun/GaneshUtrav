@@ -156,21 +156,48 @@
             const todayEvent = events[todayEventIdx];
             const nextEvent = events[todayEventIdx + 1] || null;
             let html = '';
+            const now = new Date();
+            // Today's event block
             if (todayEvent) {
-                html += `<div class="event${todayEvent.bhandara ? ' bhandara' : ''}">
-                    <span class="date">${formatDate(todayEvent.date)}</span><br>
-                    ${todayEvent.morning ? `<strong>${langData[currentLang].morning}</strong> ${todayEvent.morning}<br>` : ''}
-                    <strong>${langData[currentLang].evening}</strong> ${todayEvent.evening}<br>
-                    ${todayEvent.bhandara ? `<strong>${langData[currentLang].bhandara}</strong> After Evening Aarti` : ''}
-                </div>`;
+                let showMorning = false, showEvening = false;
+                // Morning Aarti: only show if time is in future
+                if (todayEvent.morning) {
+                    const morningAarti = new Date(todayEvent.date);
+                    morningAarti.setHours(8,30,0,0);
+                    if (now < morningAarti) showMorning = true;
+                }
+                // Evening Aarti: only show if time is in future
+                if (todayEvent.evening) {
+                    const eveningAarti = new Date(todayEvent.date);
+                    eveningAarti.setHours(20,30,0,0);
+                    if (now < eveningAarti) showEvening = true;
+                }
+                // Only show block if at least one event is in future
+                if (showMorning || showEvening || (todayEvent.bhandara && now < (new Date(todayEvent.date.setHours(20,30,0,0))))) {
+                    html += `<div class="event${todayEvent.bhandara ? ' bhandara' : ''}">
+                        <span class="date">${formatDate(todayEvent.date)}</span><br>
+                        ${showMorning ? `<strong>${langData[currentLang].morning}</strong> ${todayEvent.morning}<br>` : ''}
+                        ${showEvening ? `<strong>${langData[currentLang].evening}</strong> ${todayEvent.evening}<br>` : ''}
+                        ${(todayEvent.bhandara && showEvening) ? `<strong>${langData[currentLang].bhandara}</strong> After Evening Aarti` : ''}
+                    </div>`;
+                }
             }
+            // Next event block (only if its morning/evening Aarti is in future)
             if (nextEvent) {
-                html += `<div class="event${nextEvent.bhandara ? ' bhandara' : ''}">
-                    <span class="date">${formatDate(nextEvent.date)}</span><br>
-                    ${nextEvent.morning ? `<strong>${langData[currentLang].morning}</strong> ${nextEvent.morning}<br>` : ''}
-                    <strong>${langData[currentLang].evening}</strong> ${nextEvent.evening}<br>
-                    ${nextEvent.bhandara ? `<strong>${langData[currentLang].bhandara}</strong> After Evening Aarti` : ''}
-                </div>`;
+                const nextMorning = new Date(nextEvent.date);
+                nextMorning.setHours(8,30,0,0);
+                const nextEvening = new Date(nextEvent.date);
+                nextEvening.setHours(20,30,0,0);
+                let showNextMorning = nextEvent.morning && now < nextMorning;
+                let showNextEvening = nextEvent.evening && now < nextEvening;
+                if (showNextMorning || showNextEvening || (nextEvent.bhandara && now < nextEvening)) {
+                    html += `<div class="event${nextEvent.bhandara ? ' bhandara' : ''}">
+                        <span class="date">${formatDate(nextEvent.date)}</span><br>
+                        ${showNextMorning ? `<strong>${langData[currentLang].morning}</strong> ${nextEvent.morning}<br>` : ''}
+                        ${showNextEvening ? `<strong>${langData[currentLang].evening}</strong> ${nextEvent.evening}<br>` : ''}
+                        ${(nextEvent.bhandara && showNextEvening) ? `<strong>${langData[currentLang].bhandara}</strong> After Evening Aarti` : ''}
+                    </div>`;
+                }
             }
             document.getElementById('schedule').innerHTML = `<h3 style="text-align:center; color:#d35400;">${langData[currentLang].schedule}</h3>` + html;
         }
