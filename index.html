@@ -131,13 +131,16 @@
         const events = [];
         const startDate = new Date('2025-08-27');
         const endDate = new Date('2025-09-06');
-        for (let d = new Date(startDate), i = 0; d <= endDate; d.setDate(d.getDate() + 1), i++) {
+        for (let d = new Date(startDate), i = 0; d <= endDate; i++) {
+            // Clone date for each event
+            const eventDate = new Date(d.getTime());
             events.push({
-                date: new Date(d),
+                date: eventDate,
                 morning: i === 0 ? '' : '8:30 AM - 9:00 AM', // Only from day 2 onwards
                 evening: '8:30 PM - 9:00 PM',
-                bhandara: d.getDate() === 6 && d.getMonth() === 8 // Sep is month 8 (0-indexed)
+                bhandara: eventDate.getDate() === 6 && eventDate.getMonth() === 8 // Sep is month 8 (0-indexed)
             });
+            d.setDate(d.getDate() + 1);
         }
 
         function getTodayEventIdx() {
@@ -152,106 +155,97 @@
             return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', weekday: 'short' });
         }
         function renderEvents() {
-            const todayEventIdx = getTodayEventIdx();
-            const todayEvent = events[todayEventIdx];
-            const nextEvent = events[todayEventIdx + 1] || null;
-            let html = '';
             const now = new Date();
-            // Today's event block
-            if (todayEvent) {
-                let showMorning = false, showEvening = false;
-                // Morning Aarti: only show if time is in future
-                if (todayEvent.morning) {
-                    const morningAarti = new Date(todayEvent.date);
-                    morningAarti.setHours(8,30,0,0);
-                    if (now < morningAarti) showMorning = true;
+            // Only show today's event
+            const todayDate = new Date();
+            todayDate.setHours(0,0,0,0);
+            let html = '';
+            for (const event of events) {
+                const eventDate = new Date(event.date);
+                eventDate.setHours(0,0,0,0);
+                if (eventDate.getTime() !== todayDate.getTime()) continue;
+                let morningStatus = '', eveningStatus = '';
+                if (event.morning) {
+                    const morningAartiStart = new Date(event.date);
+                    morningAartiStart.setHours(8,30,0,0);
+                    const morningAartiEnd = new Date(event.date);
+                    morningAartiEnd.setHours(9,0,0,0);
+                    if (now < morningAartiStart) {
+                        morningStatus = '<span style="color:#2980b9;font-weight:bold;">(Upcoming)</span>';
+                    } else if (now >= morningAartiStart && now < morningAartiEnd) {
+                        morningStatus = '<span style="color:#27ae60;font-weight:bold;">(Happening Now)</span>';
+                    } else {
+                        morningStatus = '<span style="color:#888;">(Completed)</span>';
+                    }
                 }
-                // Evening Aarti: only show if time is in future
-                if (todayEvent.evening) {
-                    const eveningAarti = new Date(todayEvent.date);
-                    eveningAarti.setHours(20,30,0,0);
-                    if (now < eveningAarti) showEvening = true;
+                if (event.evening) {
+                    const eveningAartiStart = new Date(event.date);
+                    eveningAartiStart.setHours(20,30,0,0);
+                    const eveningAartiEnd = new Date(event.date);
+                    eveningAartiEnd.setHours(21,0,0,0);
+                    if (now < eveningAartiStart) {
+                        eveningStatus = '<span style="color:#2980b9;font-weight:bold;">(Upcoming)</span>';
+                    } else if (now >= eveningAartiStart && now < eveningAartiEnd) {
+                        eveningStatus = '<span style="color:#27ae60;font-weight:bold;">(Happening Now)</span>';
+                    } else {
+                        eveningStatus = '<span style="color:#888;">(Completed)</span>';
+                    }
                 }
-                // Only show block if at least one event is in future
-                if (showMorning || showEvening || (todayEvent.bhandara && now < (new Date(todayEvent.date.setHours(20,30,0,0))))) {
-                    html += `<div class="event${todayEvent.bhandara ? ' bhandara' : ''}">
-                        <span class="date">${formatDate(todayEvent.date)}</span><br>
-                        ${showMorning ? `<strong>${langData[currentLang].morning}</strong> ${todayEvent.morning}<br>` : ''}
-                        ${showEvening ? `<strong>${langData[currentLang].evening}</strong> ${todayEvent.evening}<br>` : ''}
-                        ${(todayEvent.bhandara && showEvening) ? `<strong>${langData[currentLang].bhandara}</strong> After Evening Aarti` : ''}
-                    </div>`;
-                }
-            }
-            // Next event block (only if its morning/evening Aarti is in future)
-            if (nextEvent) {
-                const nextMorning = new Date(nextEvent.date);
-                nextMorning.setHours(8,30,0,0);
-                const nextEvening = new Date(nextEvent.date);
-                nextEvening.setHours(20,30,0,0);
-                let showNextMorning = nextEvent.morning && now < nextMorning;
-                let showNextEvening = nextEvent.evening && now < nextEvening;
-                if (showNextMorning || showNextEvening || (nextEvent.bhandara && now < nextEvening)) {
-                    html += `<div class="event${nextEvent.bhandara ? ' bhandara' : ''}">
-                        <span class="date">${formatDate(nextEvent.date)}</span><br>
-                        ${showNextMorning ? `<strong>${langData[currentLang].morning}</strong> ${nextEvent.morning}<br>` : ''}
-                        ${showNextEvening ? `<strong>${langData[currentLang].evening}</strong> ${nextEvent.evening}<br>` : ''}
-                        ${(nextEvent.bhandara && showNextEvening) ? `<strong>${langData[currentLang].bhandara}</strong> After Evening Aarti` : ''}
-                    </div>`;
-                }
+                html += `<div class="event${event.bhandara ? ' bhandara' : ''}">
+                    <span class="date">${formatDate(event.date)}</span><br>
+                    <strong>${langData[currentLang].morning}</strong> ${event.morning} ${morningStatus}<br>
+                    <strong>${langData[currentLang].evening}</strong> ${event.evening} ${eveningStatus}<br>
+                    ${(event.bhandara && eveningStatus.includes('Happening Now')) ? `<strong>${langData[currentLang].bhandara}</strong> After Evening Aarti` : ''}
+                </div>`;
             }
             document.getElementById('schedule').innerHTML = `<h3 style="text-align:center; color:#d35400;">${langData[currentLang].schedule}</h3>` + html;
         }
-        renderEvents();
 
-        // Countdown to next event
         function getNextEventTime() {
-            const todayEventIdx = getTodayEventIdx();
-            const todayEvent = events[todayEventIdx];
-            const nextEvent = events[todayEventIdx + 1] || null;
             const now = new Date();
-            let nextTime;
-            if (!todayEvent) return null;
-            // For first day, only evening Aarti
-            if (todayEventIdx === 0) {
-                const eveningAarti = new Date(todayEvent.date);
-                eveningAarti.setHours(20,30,0,0);
-                if (now < eveningAarti) {
-                    nextTime = eveningAarti;
-                    return { label: 'Evening Aarti', time: nextTime };
+            for (const event of events) {
+                const eventDate = new Date(event.date);
+                eventDate.setHours(0,0,0,0);
+                const todayDate = new Date();
+                todayDate.setHours(0,0,0,0);
+                if (eventDate < todayDate) continue;
+                // Morning Aarti
+                if (event.morning) {
+                    const morningAartiStart = new Date(event.date);
+                    morningAartiStart.setHours(8,30,0,0);
+                    const morningAartiEnd = new Date(event.date);
+                    morningAartiEnd.setHours(9,0,0,0);
+                    if (now < morningAartiStart) {
+                        return { label: 'Morning Aarti', time: morningAartiStart, status: 'upcoming' };
+                    } else if (now >= morningAartiStart && now < morningAartiEnd) {
+                        return { label: 'Morning Aarti', time: morningAartiStart, status: 'happening' };
+                    }
                 }
-                // After evening Aarti, go to next day's morning Aarti
-                if (nextEvent) {
-                    const nextMorning = new Date(nextEvent.date);
-                    nextMorning.setHours(8,30,0,0);
-                    return { label: 'Morning Aarti', time: nextMorning };
+                // Evening Aarti
+                if (event.evening) {
+                    const eveningAartiStart = new Date(event.date);
+                    eveningAartiStart.setHours(20,30,0,0);
+                    const eveningAartiEnd = new Date(event.date);
+                    eveningAartiEnd.setHours(21,0,0,0);
+                    if (now < eveningAartiStart) {
+                        return { label: 'Evening Aarti', time: eveningAartiStart, status: 'upcoming' };
+                    } else if (now >= eveningAartiStart && now < eveningAartiEnd) {
+                        return { label: 'Evening Aarti', time: eveningAartiStart, status: 'happening' };
+                    }
                 }
-                return null;
-            }
-            // For other days, check morning then evening
-            const morningAarti = new Date(todayEvent.date);
-            morningAarti.setHours(8,30,0,0);
-            if (now < morningAarti && todayEvent.morning) {
-                nextTime = morningAarti;
-                return { label: 'Morning Aarti', time: nextTime };
-            }
-            const eveningAarti = new Date(todayEvent.date);
-            eveningAarti.setHours(20,30,0,0);
-            if (now < eveningAarti) {
-                nextTime = eveningAarti;
-                return { label: 'Evening Aarti', time: nextTime };
-            }
-            // If Bhandara today and after evening aarti
-            if (todayEvent.bhandara && now >= eveningAarti) {
-                return { label: 'Bhandara', time: eveningAarti };
-            }
-            // Otherwise, next day's morning aarti
-            if (nextEvent) {
-                const nextMorning = new Date(nextEvent.date);
-                nextMorning.setHours(8,30,0,0);
-                return { label: 'Morning Aarti', time: nextMorning };
+                // Bhandara
+                if (event.bhandara && event.evening) {
+                    const eveningAartiEnd = new Date(event.date);
+                    eveningAartiEnd.setHours(21,0,0,0);
+                    if (now >= eveningAartiEnd) {
+                        return { label: 'Bhandara', time: eveningAartiEnd, status: 'upcoming' };
+                    }
+                }
             }
             return null;
         }
+
+        // Countdown to next event
         function updateCounter() {
             const next = getNextEventTime();
             if (!next) {
@@ -259,6 +253,10 @@
                 return;
             }
             const now = new Date();
+            if (next.status === 'happening') {
+                document.getElementById('counter').textContent = `${next.label} is happening now!`;
+                return;
+            }
             const diff = next.time - now;
             if (diff <= 0) {
                 document.getElementById('counter').textContent = `${next.label} is happening now!`;
@@ -270,7 +268,11 @@
             document.getElementById('counter').textContent = `Next: ${next.label} in ${hours}h ${mins}m ${secs}s`;
         }
         updateCounter();
-        setInterval(updateCounter, 1000);
+        renderEvents();
+        setInterval(() => {
+            updateCounter();
+            renderEvents();
+        }, 1000);
     </script>
 </body>
 </html>
